@@ -1,14 +1,12 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import {
   List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
   Button,
   Modal,
-  Input,
+  Grid,
 } from "@material-ui/core";
-import "./Todo.css";
+import {Rating} from '@material-ui/lab';
+import "./QA.css";
 import { db } from "./firebase";
 import { makeStyles } from "@material-ui/core/styles";
 import DeleteIcon from "@material-ui/icons/Delete";
@@ -18,55 +16,72 @@ const useStyles = makeStyles((theme) => ({
   paper: {
     position: "relative",
     left: 400,
-    // position: "center",
     width: 600,
     backgroundColor: theme.palette.background.paper,
-    // border: "2px solid #000",
     boxShadow: theme.shadows[5],
     padding: theme.spacing(2, 4, 3),
   },
 
   button: {
     width: 150,
-    // border: '2px solid #000',
     margin: "10px",
   },
 }));
 
-function Todo(props) {
+function QA(props) {
+  
   const classes = useStyles();
   const [open, setOpen] = useState(false);
-  const [input, setInput] = useState();
+  const [question, setQuestion] = useState('');
+  const [answer,setAnswer]=useState('')
+  const [rating,setRating]=useState(1)
 
-  const handleOpen = () => {
-    setOpen(true);
-  };
 
-  const updateTodo = () => {
-    // update the todo with the new input
-    db.collection("todos").doc(props.todo.id).set(
+  const updateQA = () => {
+    db.collection("qa").doc(props.id).set(
       {
-        todo: input,
+        question,answer,rating
       },
       { merge: true }
     );
+    setQuestion('')
+    setAnswer('')
     setOpen(false);
   };
+
+
+  useEffect(()=>{
+    setQuestion(props.question)
+    setAnswer(props.answer)
+    setRating(props.rating)
+  },[open])
 
   return (
     <>
       <Modal open={open} onClose={(e) => setOpen(false)}>
         <div className={classes.paper}>
-          <h3>Update the Task</h3>
-          <input
-            placeholder={props.todo.todo}
-            value={input}
-            onChange={(Event) => setInput(Event.target.value)}
-          />
+          <h3>Update the QA</h3>
+          <Grid container spacing={3}>
+            <Grid item> <input
+            placeholder={'question'}
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+          /></Grid>
+             <Grid item><input
+            placeholder={'answer'}
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+          /></Grid>
+              <Grid item>
+                <Rating value={rating} onChange={(e,val)=>setRating(val)} />
+              </Grid>
+          </Grid>
+           <br/>
+           
           <Button
             variant="contained"
             color="default"
-            onClick={updateTodo}
+            onClick={updateQA}
             className={classes.button}
           >
             Upload ✔
@@ -74,16 +89,17 @@ function Todo(props) {
         </div>
       </Modal>
       <List className="todo__list">
-        <ListItem>
-          <ListItemAvatar></ListItemAvatar>
-          <ListItemText primary={props.todo.todo} secondary="Uploaded Task 🤞 "    />
-        </ListItem>
+          <h2>{props.index}.{props.question}</h2><br/>
+           <h4>{props.answer}</h4>
+           <Rating value={props.rating} readOnly/><br/>
         <Button
           variant="contained"
           color="secondary"
-          onClick={(Event) =>
-            db.collection("todos").doc(props.todo.id).delete()
+          onClick={(Event) =>{      
+            db.collection("qa").doc(props.id).delete()
           }
+        }       
+          
           className={classes.button}
           startIcon={<DeleteIcon />}
         >
@@ -100,11 +116,10 @@ function Todo(props) {
           Edit
         </Button>
 
-        {/* <Button className="edit__btn" onClick={e => setOpen(true)}>Edit</Button> */}
-        {/* <DeleteForeverIcon onClick={Event =>db.collection('todos').doc(props.todo.id).delete()}>❌Delete</DeleteForeverIcon> */}
+        
       </List>
     </>
   );
 }
 
-export default Todo;
+export default QA;

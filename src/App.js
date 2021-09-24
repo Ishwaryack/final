@@ -1,61 +1,79 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { Button, FormControl, InputLabel, Input, FormHelperText } from '@material-ui/core';
-import Todo from './Todo';
+import QA from './QA';
 import {db} from './firebase';
 import firebase from "firebase"
+import {
 
+  Grid,
+} from "@material-ui/core";
+import { Rating} from '@material-ui/lab'
 
 function App() {
-  const [todos, setTodos] = useState([])
-  const [input, setInput] = useState("")
 
-  // when the app loads, we need to listen to database and then we get some data using fetch, 
+
+  const [qa,setQA]=useState([])
+  const [question,setQuestion]=useState('')
+  const [answer,setAnswer]=useState('')
+  const [rating,setRating]=useState(0)
+
+  
   useEffect(() => {
-  //this code fires when app.js loaded
-  db.collection('todos').orderBy("timestamp", "desc").onSnapshot(snapshot => {
-    // console.log(snapshot.docs.map(doc => doc.data().todos))
-    // console.log(snapshot.docs.map(doc => doc.data()))
-    setTodos(snapshot.docs.map(doc => ({ id:doc.id, todo: doc.data().todo})))
+
+  db.collection('qa').orderBy("timestamp", "desc").onSnapshot(snapshot => {
+    let _QA = snapshot.docs.map(doc => ({ id:doc.id, question: doc.data().question,answer:doc.data().answer,rating:doc.data().rating}))
+ 
+    setQA(_QA)
   })}, [])
 
-  // Function on button add TODo
+
   const addTodo = (Event) => {
-    // preventing default nature of form of refresh
+
     Event.preventDefault();
     
-    db.collection('todos').add({
-      todo: input,
+    db.collection('qa').add({
+      question,answer,rating,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then((response)=>{
+      setRating('')
+      setQuestion('')
+      setAnswer('')
     })
 
-    // to remove the entered words from input after clicking button
-    setInput("");
+
+ 
   }
 
 
 
   return (
     <div className="App">
-      {/* Wraping up in form to make sure enter key will submiting the form  */}
-      <h1 className =  "App-header">Todo List </h1>
-      <h3>Developed by Sumit</h3>
+     
+      <h1 className =  "App-header">QA List </h1>
+      <h3>Developed by Ishwarya and Dhanya</h3>
       <form >
-        <FormControl>
-          <InputLabel><span role="img" aria-label="emoji">✅ </span> Write a Task</InputLabel>
-          <Input value={input} onChange={Event => setInput(Event.target.value)} />
-          <FormHelperText>We'll make you productive <span role="img" aria-label="emoji">🕒</span> </FormHelperText>
-        </FormControl>
+        <Grid container spacing={4}>
+          <Grid item >
+               <Input placeholder='Enter Question' value={question} onChange={Event => setQuestion(Event.target.value)} />
+          </Grid>
+          <Grid item >
+           <Input placeholder='Enter Answer' value={answer} onChange={Event => setAnswer(Event.target.value)} />
+          </Grid>
+          <Grid item>
+            <Rating value={rating} onChange={(e,value)=>setRating(value)}/>
+          </Grid>
+        </Grid>
 
-        {/* using material ui */}
-        <Button disabled={!input} type="submit" variant="contained" color="primary" onClick={addTodo}>
+      
+        <Button disabled={!question && ! answer} type="submit" variant="contained" color="primary" onClick={addTodo}>
           Add Todo
         </Button>
-        {/* <button onClick={addTodo}>Add Todo </button> */}
+       
       </form>
       <ul>
-        {todos.map(todo => (
-         <Todo todo={todo} />
+        {qa.map((q,i) => (
+         <QA question={q.question} answer={q.answer} id={q.id} index={i+1} rating={q.rating}/>
         ))}
       </ul>
     </div>
